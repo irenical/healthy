@@ -1,0 +1,58 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.irenical.maven</groupId>
+    <artifactId>parent-root</artifactId>
+    <version>1.8.2</version>
+  </parent>
+
+  <groupId>org.irenical.healthy</groupId>
+  <artifactId>healthy</artifactId>
+  <version>1.0.0</version>
+
+  <name>Healthy</name>
+  <description>Service registration and health report to Consul</description>
+
+  <packaging>jar</packaging>
+
+  <scm>
+    <connection>scm:git:git@github.com:irenical/healthy.git</connection>
+    <developerConnection>scm:git:git@github.com:irenical/healthy.git</developerConnection>
+    <url>git@github.com:irenical/healthy.git</url>
+  </scm>
+
+  <developers>
+    <developer>
+      <name>Tiago Simão</name>
+      <email>tiagosimao@gmail.com</email>
+    </developer>
+  </developers>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.irenical.lifecycle</groupId>
+      <artifactId>lifecycle</artifactId>
+      <version>1.0.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.irenical.jindy</groupId>
+      <artifactId>jindy-archaius-consul</artifactId>
+      <version>1.5.0</version>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.12</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>1.1.7</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+</project>
