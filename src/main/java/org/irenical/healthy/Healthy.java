@@ -25,11 +25,11 @@ public class Healthy implements LifeCycle {
   private static final Logger LOGGER = LoggerFactory.getLogger(Healthy.class);
 
   public static final String PROPERTY_APPLICATION_NAME = "application";
-  
+
   public static final String PROPERTY_ENVIRONMENT = "environment";
-  
+
   public static final String PROPERTY_STACK = "stack";
-  
+
   public static final String PROPERTY_CLUSTER = "cluster";
 
   public static final String PROPERTY_CONSUL_HOST = "consul.host";
@@ -46,8 +46,6 @@ public class Healthy implements LifeCycle {
 
   public static final int MIN_APPLICATION_HEALTHCHECK_INTERVAL_MILLIS = 1000;
 
-  private final IrenicalConsulConfigStrategy strategy = new IrenicalConsulConfigStrategy();
-
   private final ScheduledExecutorService checkExecutor = new ScheduledThreadPoolExecutor(1);
 
   private final Config config = ConfigFactory.getConfig();
@@ -61,7 +59,7 @@ public class Healthy implements LifeCycle {
   private ConsulClient client;
 
   public Healthy(LifeCycle target, String serviceAddressPropertyKey, String servicePortPropertyKey) {
-    if(target==null){
+    if (target == null) {
       throw new IllegalArgumentException("Target LifeCycle cannot be null");
     }
     if(servicePortPropertyKey==null){
@@ -74,22 +72,18 @@ public class Healthy implements LifeCycle {
 
   @Override
   public void start() throws ConfigNotFoundException {
-    if (!strategy.bypassConsul(config)) {
-      client = new ConsulClient(config.getString(PROPERTY_CONSUL_HOST, DEFAULT_CONSUL_HOST), config.getInt(PROPERTY_CONSUL_PORT, DEFAULT_CONSUL_PORT));
-      // register service into consul
-      registerService();
-      // monitor service and schedule next health checks
-      monitor();
-      // setup property change listeners
-      setupListeners();
-    }
+    client = new ConsulClient(config.getString(PROPERTY_CONSUL_HOST, DEFAULT_CONSUL_HOST), config.getInt(PROPERTY_CONSUL_PORT, DEFAULT_CONSUL_PORT));
+    // register service into consul
+    registerService();
+    // monitor service and schedule next health checks
+    monitor();
+    // setup property change listeners
+    setupListeners();
   }
 
   @Override
   public void stop() throws ConfigNotFoundException {
-    if (!strategy.bypassConsul(config)) {
-      deRegisterService();
-    }
+    deRegisterService();
   }
 
   @Override
