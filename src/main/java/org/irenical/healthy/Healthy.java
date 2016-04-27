@@ -21,30 +21,24 @@ import com.ecwid.consul.v1.agent.model.NewService;
 import com.ecwid.consul.v1.agent.model.Self;
 
 public class Healthy implements LifeCycle {
+  
+  private static final String PROPERTY_APPLICATION_NAME = "application";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(Healthy.class);
 
-  public static final String PROPERTY_APPLICATION_NAME = "application";
+  private static final String PROPERTY_CONSUL_HOST = "consul.host";
 
-  public static final String PROPERTY_ENVIRONMENT = "environment";
+  private static final String DEFAULT_CONSUL_HOST = "localhost";
 
-  public static final String PROPERTY_STACK = "stack";
+  private static final String PROPERTY_CONSUL_PORT = "consul.port";
 
-  public static final String PROPERTY_CLUSTER = "cluster";
+  private static final int DEFAULT_CONSUL_PORT = 8500;
 
-  public static final String PROPERTY_CONSUL_HOST = "consul.host";
+  private static final String PROPERTY_HEALTHCHECK_INTERVAL_MILLIS = "healthy.interval.millis";
 
-  public static final String DEFAULT_CONSUL_HOST = "localhost";
+  private static final int DEFAULT_APPLICATION_HEALTHCHECK_INTERVAL_MILLIS = 10000;
 
-  public static final String PROPERTY_CONSUL_PORT = "consul.port";
-
-  public static final int DEFAULT_CONSUL_PORT = 8500;
-
-  public static final String PROPERTY_HEALTHCHECK_INTERVAL_MILLIS = "healthy.interval.millis";
-
-  public static final int DEFAULT_APPLICATION_HEALTHCHECK_INTERVAL_MILLIS = 10000;
-
-  public static final int MIN_APPLICATION_HEALTHCHECK_INTERVAL_MILLIS = 1000;
+  private static final int MIN_APPLICATION_HEALTHCHECK_INTERVAL_MILLIS = 1000;
 
   private final ScheduledExecutorService checkExecutor = new ScheduledThreadPoolExecutor(1);
 
