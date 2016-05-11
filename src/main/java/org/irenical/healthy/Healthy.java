@@ -56,9 +56,6 @@ public class Healthy implements LifeCycle {
     if (target == null) {
       throw new IllegalArgumentException("Target LifeCycle cannot be null");
     }
-    if(servicePortPropertyKey==null){
-      throw new IllegalArgumentException("Port property key cannot be null");
-    }
     this.target = target;
     this.serviceAddressPropertyKey = serviceAddressPropertyKey;
     this.servicePortPropertyKey = servicePortPropertyKey;
@@ -93,7 +90,9 @@ public class Healthy implements LifeCycle {
     if (serviceAddressPropertyKey != null) {
       config.listen(serviceAddressPropertyKey, this::onServicePropertyChanged);
     }
-    config.listen(servicePortPropertyKey, this::onServicePropertyChanged);
+    if (servicePortPropertyKey != null) {
+      config.listen(servicePortPropertyKey, this::onServicePropertyChanged);
+    }
   }
 
   private void onServicePropertyChanged(String propertyKey) {
@@ -119,7 +118,9 @@ public class Healthy implements LifeCycle {
     if (serviceAddressPropertyKey != null) {
       service.setAddress(config.getString(serviceAddressPropertyKey));
     }
-    service.setPort(config.getMandatoryInt(servicePortPropertyKey));
+    if (servicePortPropertyKey != null) {
+      service.setPort(config.getMandatoryInt(servicePortPropertyKey));
+    }
 
     NewService.Check check = new NewService.Check();
     check.setTtl((2 * getHealthCheckInterval()) + "ms");
