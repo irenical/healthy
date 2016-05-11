@@ -1,7 +1,7 @@
 [![][maven img]][maven]
 [![][travis img]][travis]
 
-A ready-to-use LifeCycle that registers and reports health to Consul. It assumes you're Jindy and that your application is also a LifeCycle with a well implemented isRunning() method.
+A ready-to-use LifeCycle that registers and reports health to Consul. It assumes you're using Jindy and that your application is also a LifeCycle with a well implemented isRunning() method.
 
 ## Usage
 In your application configuration, make sure you have the following properties
