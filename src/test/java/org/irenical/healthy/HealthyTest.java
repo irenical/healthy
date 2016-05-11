@@ -25,12 +25,6 @@ public class HealthyTest {
     new Healthy(null, null, "my.app.port");
   }
   
-  @Test(expected=IllegalArgumentException.class)
-  public void testAssertPort(){
-    TrivialLifecycle lc = new TrivialLifecycle();
-    new Healthy(lc, null, null);
-  }
-  
   @Test(expected=ConfigNotFoundException.class)
   public void testAssertApplication() throws ConfigNotFoundException {
     TrivialLifecycle lc = new TrivialLifecycle();

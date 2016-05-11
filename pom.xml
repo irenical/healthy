@@ -10,7 +10,7 @@
 
   <groupId>org.irenical.healthy</groupId>
   <artifactId>healthy</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
 
   <name>Healthy</name>
   <description>Service registration and health report to Consul</description>
