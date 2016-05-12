@@ -1,12 +1,10 @@
 package org.irenical.healthy;
 
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Map;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
+import com.ecwid.consul.v1.ConsulClient;
+import com.ecwid.consul.v1.Response;
+import com.ecwid.consul.v1.agent.model.Check;
+import com.ecwid.consul.v1.agent.model.NewService;
+import com.ecwid.consul.v1.agent.model.Self;
 import org.irenical.jindy.Config;
 import org.irenical.jindy.ConfigFactory;
 import org.irenical.jindy.ConfigNotFoundException;
@@ -14,15 +12,14 @@ import org.irenical.lifecycle.LifeCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ecwid.consul.v1.ConsulClient;
-import com.ecwid.consul.v1.Response;
-import com.ecwid.consul.v1.agent.model.Check;
-import com.ecwid.consul.v1.agent.model.NewService;
-import com.ecwid.consul.v1.agent.model.Self;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class Healthy implements LifeCycle {
-  
-  private static final String PROPERTY_APPLICATION_NAME = "application";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(Healthy.class);
 
@@ -40,11 +37,13 @@ public class Healthy implements LifeCycle {
 
   private static final int MIN_APPLICATION_HEALTHCHECK_INTERVAL_MILLIS = 1000;
 
+  private static final Config CONFIG = ConfigFactory.getConfig();
+
   private final ScheduledExecutorService checkExecutor = new ScheduledThreadPoolExecutor(1);
 
-  private final Config config = ConfigFactory.getConfig();
-
   private final LifeCycle target;
+
+  private final String serviceName;
 
   private final String serviceAddressPropertyKey;
 
@@ -52,18 +51,27 @@ public class Healthy implements LifeCycle {
 
   private ConsulClient client;
 
-  public Healthy(LifeCycle target, String serviceAddressPropertyKey, String servicePortPropertyKey) {
+  public Healthy(LifeCycle target, String serviceName, String serviceAddressPropertyKey) {
+    this(target, serviceName, serviceAddressPropertyKey, null);
+  }
+
+  public Healthy(LifeCycle target, String serviceName, String serviceAddressPropertyKey, String servicePortPropertyKey) {
     if (target == null) {
       throw new IllegalArgumentException("Target LifeCycle cannot be null");
     }
+    if (serviceName == null || serviceName.trim().isEmpty()) {
+      throw new IllegalArgumentException("Application name cannot be null or empty");
+    }
     this.target = target;
+    this.serviceName = serviceName;
     this.serviceAddressPropertyKey = serviceAddressPropertyKey;
     this.servicePortPropertyKey = servicePortPropertyKey;
   }
 
   @Override
   public void start() throws ConfigNotFoundException {
-    client = new ConsulClient(config.getString(PROPERTY_CONSUL_HOST, DEFAULT_CONSUL_HOST), config.getInt(PROPERTY_CONSUL_PORT, DEFAULT_CONSUL_PORT));
+    client = new ConsulClient(CONFIG.getString(PROPERTY_CONSUL_HOST, DEFAULT_CONSUL_HOST),
+      CONFIG.getInt(PROPERTY_CONSUL_PORT, DEFAULT_CONSUL_PORT));
     // register service into consul
     registerService();
     // monitor service and schedule next health checks
@@ -88,10 +96,10 @@ public class Healthy implements LifeCycle {
 
   private void setupListeners() {
     if (serviceAddressPropertyKey != null) {
-      config.listen(serviceAddressPropertyKey, this::onServicePropertyChanged);
+      CONFIG.listen(serviceAddressPropertyKey, this::onServicePropertyChanged);
     }
     if (servicePortPropertyKey != null) {
-      config.listen(servicePortPropertyKey, this::onServicePropertyChanged);
+      CONFIG.listen(servicePortPropertyKey, this::onServicePropertyChanged);
     }
   }
 
@@ -110,16 +118,14 @@ public class Healthy implements LifeCycle {
    * @throws ConfigNotFoundException
    */
   private void registerService() throws ConfigNotFoundException {
-    String applicationName = config.getMandatoryString(PROPERTY_APPLICATION_NAME);
-
     NewService service = new NewService();
-    service.setId(applicationName);
-    service.setName(applicationName);
+    service.setId(serviceName);
+    service.setName(serviceName);
     if (serviceAddressPropertyKey != null) {
-      service.setAddress(config.getString(serviceAddressPropertyKey));
+      service.setAddress(CONFIG.getString(serviceAddressPropertyKey));
     }
     if (servicePortPropertyKey != null) {
-      service.setPort(config.getMandatoryInt(servicePortPropertyKey));
+      service.setPort(CONFIG.getMandatoryInt(servicePortPropertyKey));
     }
 
     NewService.Check check = new NewService.Check();
@@ -135,7 +141,7 @@ public class Healthy implements LifeCycle {
    * @throws ConfigNotFoundException
    */
   private void deRegisterService() throws ConfigNotFoundException {
-    client.agentServiceDeregister(config.getMandatoryString(PROPERTY_APPLICATION_NAME));
+    client.agentServiceDeregister(serviceName);
   }
 
   /**
@@ -146,7 +152,7 @@ public class Healthy implements LifeCycle {
   }
 
   private int getHealthCheckInterval() {
-    int interval = config.getInt(PROPERTY_HEALTHCHECK_INTERVAL_MILLIS, DEFAULT_APPLICATION_HEALTHCHECK_INTERVAL_MILLIS);
+    int interval = CONFIG.getInt(PROPERTY_HEALTHCHECK_INTERVAL_MILLIS, DEFAULT_APPLICATION_HEALTHCHECK_INTERVAL_MILLIS);
     if (interval < MIN_APPLICATION_HEALTHCHECK_INTERVAL_MILLIS) {
       interval = MIN_APPLICATION_HEALTHCHECK_INTERVAL_MILLIS;
     }
@@ -159,7 +165,7 @@ public class Healthy implements LifeCycle {
   private void monitor() {
     try {
       Response<Map<String, Check>> got = client.getAgentChecks();
-      Check gotCheck = got.getValue().get("service:" + config.getMandatoryString(PROPERTY_APPLICATION_NAME));
+      Check gotCheck = got.getValue().get("service:" + serviceName);
       String checkId = gotCheck.getCheckId();
       ApplicationHealth health = healthCheck();
       switch (health.getHealth()) {
