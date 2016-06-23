@@ -118,18 +118,16 @@ public class Healthy implements LifeCycle {
    * @throws ConfigNotFoundException
    */
   private Check getCheck() throws ConfigNotFoundException {
-    String serviceAddressProperty = CONFIG.getString(serviceAddressPropertyKey);
-    int servicePortProperty = CONFIG.getMandatoryInt(servicePortPropertyKey);
     Check result = client.getAgentChecks().getValue().get(CHECK_PREFIX + serviceName);
     if (result == null) {
       NewService service = new NewService();
       service.setId(serviceName);
       service.setName(serviceName);
       if (serviceAddressPropertyKey != null) {
-        service.setAddress(serviceAddressProperty);
+        service.setAddress(CONFIG.getString(serviceAddressPropertyKey));
       }
       if (servicePortPropertyKey != null) {
-        service.setPort(servicePortProperty);
+        service.setPort(CONFIG.getMandatoryInt(servicePortPropertyKey));
       }
 
       NewService.Check check = new NewService.Check();
