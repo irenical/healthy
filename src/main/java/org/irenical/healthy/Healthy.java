@@ -1,10 +1,11 @@
 package org.irenical.healthy;
 
-import com.ecwid.consul.v1.ConsulClient;
-import com.ecwid.consul.v1.Response;
-import com.ecwid.consul.v1.agent.model.Check;
-import com.ecwid.consul.v1.agent.model.NewService;
-import com.ecwid.consul.v1.agent.model.Self;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 import org.irenical.jindy.Config;
 import org.irenical.jindy.ConfigFactory;
 import org.irenical.jindy.ConfigNotFoundException;
@@ -12,16 +13,17 @@ import org.irenical.lifecycle.LifeCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Map;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import com.ecwid.consul.v1.ConsulClient;
+import com.ecwid.consul.v1.Response;
+import com.ecwid.consul.v1.agent.model.Check;
+import com.ecwid.consul.v1.agent.model.NewService;
+import com.ecwid.consul.v1.agent.model.Self;
 
 public class Healthy implements LifeCycle {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(Healthy.class);
+
+  private static final String CHECK_PREFIX = "service:";
 
   private static final String PROPERTY_CONSUL_HOST = "consul.host";
 
@@ -55,7 +57,8 @@ public class Healthy implements LifeCycle {
     this(target, serviceName, serviceAddressPropertyKey, null);
   }
 
-  public Healthy(LifeCycle target, String serviceName, String serviceAddressPropertyKey, String servicePortPropertyKey) {
+  public Healthy(LifeCycle target, String serviceName, String serviceAddressPropertyKey,
+      String servicePortPropertyKey) {
     if (target == null) {
       throw new IllegalArgumentException("Target LifeCycle cannot be null");
     }
@@ -71,9 +74,7 @@ public class Healthy implements LifeCycle {
   @Override
   public void start() throws ConfigNotFoundException {
     client = new ConsulClient(CONFIG.getString(PROPERTY_CONSUL_HOST, DEFAULT_CONSUL_HOST),
-      CONFIG.getInt(PROPERTY_CONSUL_PORT, DEFAULT_CONSUL_PORT));
-    // register service into consul
-    registerService();
+        CONFIG.getInt(PROPERTY_CONSUL_PORT, DEFAULT_CONSUL_PORT));
     // monitor service and schedule next health checks
     monitor();
     // setup property change listeners
@@ -106,7 +107,6 @@ public class Healthy implements LifeCycle {
   private void onServicePropertyChanged(String propertyKey) {
     try {
       deRegisterService();
-      registerService();
     } catch (ConfigNotFoundException e) {
       LOGGER.error("Error updating service", e);
     }
@@ -117,22 +117,28 @@ public class Healthy implements LifeCycle {
    *
    * @throws ConfigNotFoundException
    */
-  private void registerService() throws ConfigNotFoundException {
-    NewService service = new NewService();
-    service.setId(serviceName);
-    service.setName(serviceName);
-    if (serviceAddressPropertyKey != null) {
-      service.setAddress(CONFIG.getString(serviceAddressPropertyKey));
-    }
-    if (servicePortPropertyKey != null) {
-      service.setPort(CONFIG.getMandatoryInt(servicePortPropertyKey));
-    }
+  private Check getCheck() throws ConfigNotFoundException {
+    String serviceAddressProperty = CONFIG.getString(serviceAddressPropertyKey);
+    int servicePortProperty = CONFIG.getMandatoryInt(servicePortPropertyKey);
+    Check result = client.getAgentChecks().getValue().get(CHECK_PREFIX + serviceName);
+    if (result == null) {
+      NewService service = new NewService();
+      service.setId(serviceName);
+      service.setName(serviceName);
+      if (serviceAddressPropertyKey != null) {
+        service.setAddress(serviceAddressProperty);
+      }
+      if (servicePortPropertyKey != null) {
+        service.setPort(servicePortProperty);
+      }
 
-    NewService.Check check = new NewService.Check();
-    check.setTtl((2 * getHealthCheckInterval()) + "ms");
-    service.setCheck(check);
+      NewService.Check check = new NewService.Check();
+      check.setTtl((2 * getHealthCheckInterval()) + "ms");
+      service.setCheck(check);
 
-    client.agentServiceRegister(service);
+      client.agentServiceRegister(service);
+    }
+    return client.getAgentChecks().getValue().get(CHECK_PREFIX + serviceName);
   }
 
   /**
@@ -164,8 +170,7 @@ public class Healthy implements LifeCycle {
    */
   private void monitor() {
     try {
-      Response<Map<String, Check>> got = client.getAgentChecks();
-      Check gotCheck = got.getValue().get("service:" + serviceName);
+      Check gotCheck = getCheck();
       String checkId = gotCheck.getCheckId();
       ApplicationHealth health = healthCheck();
       switch (health.getHealth()) {
