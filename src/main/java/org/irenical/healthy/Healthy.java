@@ -63,7 +63,7 @@ public class Healthy implements LifeCycle {
       throw new IllegalArgumentException("Target LifeCycle cannot be null");
     }
     if (serviceName == null || serviceName.trim().isEmpty()) {
-      throw new IllegalArgumentException("Application name cannot be null or empty");
+      throw new IllegalArgumentException("Service name cannot be null or empty");
     }
     this.target = target;
     this.serviceName = serviceName;
@@ -185,7 +185,7 @@ public class Healthy implements LifeCycle {
         break;
       }
     } catch (Exception e) {
-      LOGGER.error("Error monitoring application health", e);
+      LOGGER.error("Error monitoring service health", e);
     } finally {
       scheduleHealthCheck();
     }
