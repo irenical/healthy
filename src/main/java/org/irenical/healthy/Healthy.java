@@ -107,6 +107,9 @@ public class Healthy implements LifeCycle {
     if (target == null) {
       throw new IllegalArgumentException("Target LifeCycle cannot be null");
     }
+    if (serviceId == null || serviceId.trim().isEmpty()) {
+      throw new IllegalArgumentException("Service id cannot be null or empty");
+    }
     if (serviceName == null || serviceName.trim().isEmpty()) {
       throw new IllegalArgumentException("Service name cannot be null or empty");
     }
