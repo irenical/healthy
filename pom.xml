@@ -10,7 +10,7 @@
 
   <groupId>org.irenical.healthy</groupId>
   <artifactId>healthy</artifactId>
-  <version>2.0.4-SNAPSHOT</version>
+  <version>2.1.0</version>
 
   <name>Healthy</name>
   <description>Service registration and health report to Consul</description>
@@ -68,7 +68,7 @@
     <dependency>
       <groupId>com.ecwid.consul</groupId>
       <artifactId>consul-api</artifactId>
-      <version>1.1.10</version>
+      <version>1.2.1</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
