@@ -1,5 +1,7 @@
 [![][maven img]][maven]
 [![][travis img]][travis]
+[![][codecov img]][codecov]
+[![][codacy img]][codacy]
 
 A ready-to-use LifeCycle that registers and reports health to Consul. It assumes you're using Jindy and that your application is also a LifeCycle with a well implemented isRunning() method.
 
@@ -25,3 +27,7 @@ l.start();
 
 [travis]:https://travis-ci.org/irenical/healthy
 [travis img]:https://travis-ci.org/irenical/healthy.svg?branch=master
+
+[codecov]:https://codecov.io/gh/irenical/healthy
+[codecov img]:https://codecov.io/gh/irenical/healthy/branch/master/graph/badge.svg
+
