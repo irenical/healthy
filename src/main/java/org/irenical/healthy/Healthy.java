@@ -249,4 +249,11 @@ public class Healthy implements LifeCycle {
     return result;
   }
 
+  public String getServiceId() {
+    return serviceId;
+  }
+
+  public String getServiceName() {
+    return serviceName;
+  }
 }
