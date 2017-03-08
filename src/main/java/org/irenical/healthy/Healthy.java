@@ -19,6 +19,10 @@ import com.ecwid.consul.v1.agent.model.Check;
 import com.ecwid.consul.v1.agent.model.NewService;
 import com.ecwid.consul.v1.agent.model.Self;
 
+/**
+ * An health checker that takes a standard LifeCycle and uses the result of its isRunning method
+ * to register a service and its status to Consul
+ */
 public class Healthy implements LifeCycle {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(Healthy.class);
@@ -45,6 +49,8 @@ public class Healthy implements LifeCycle {
 
   private final LifeCycle target;
 
+  private final String serviceId;
+
   private final String serviceName;
 
   private final String serviceAddressPropertyKey;
@@ -53,19 +59,60 @@ public class Healthy implements LifeCycle {
 
   private ConsulClient client;
 
+  /**
+   * Build a Healthy instance for the given target LifeCycle with a serviceName
+   * and the consul property for the serviceAddress value.
+   *
+   * Defaults to using the serviceName as the serviceId
+   *
+   * @param target the target LifeCycle for the health checks
+   * @param serviceName the service name to report to consul
+   * @param serviceAddressPropertyKey the Jindy property where the service address value is located (optional)
+   */
   public Healthy(LifeCycle target, String serviceName, String serviceAddressPropertyKey) {
     this(target, serviceName, serviceAddressPropertyKey, null);
   }
 
+  /**
+   * Build a Healthy instance for the given target LifeCycle with a serviceName
+   * and the consul properties for the serviceAddress and servicePort values.
+   *
+   * Defaults to using the serviceName as the serviceId
+   *
+   * @param target the target LifeCycle for the health checks
+   * @param serviceName the service name to report to consul
+   * @param serviceAddressPropertyKey the Jindy property where the service address value is located (optional)
+   * @param servicePortPropertyKey the Jindy property where the port value is located (optional)
+   */
   public Healthy(LifeCycle target, String serviceName, String serviceAddressPropertyKey,
-      String servicePortPropertyKey) {
+                 String servicePortPropertyKey) {
+
+    // Default to using the serviceName as the serviceId (the same as consuls' default behaviour)
+    this(target, serviceName, serviceName, serviceAddressPropertyKey, servicePortPropertyKey);
+  }
+
+  /**
+   * Build a Healthy instance for the given target LifeCycle with a serviceName and serviceId
+   * and the consul properties for the serviceAddress and servicePort values.
+   *
+   * @param target the target LifeCycle for the health checks
+   * @param serviceId the service id to report to consul
+   * @param serviceName the service name to report to consul
+   * @param serviceAddressPropertyKey the Jindy property where the service address value is located (optional)
+   * @param servicePortPropertyKey the Jindy property where the port value is located (optional)
+   */
+  public Healthy(LifeCycle target, String serviceId, String serviceName, String serviceAddressPropertyKey,
+                 String servicePortPropertyKey) {
+
     if (target == null) {
       throw new IllegalArgumentException("Target LifeCycle cannot be null");
     }
     if (serviceName == null || serviceName.trim().isEmpty()) {
       throw new IllegalArgumentException("Service name cannot be null or empty");
     }
+
     this.target = target;
+    this.serviceId = serviceId;
     this.serviceName = serviceName;
     this.serviceAddressPropertyKey = serviceAddressPropertyKey;
     this.servicePortPropertyKey = servicePortPropertyKey;
@@ -118,10 +165,10 @@ public class Healthy implements LifeCycle {
    * @throws ConfigNotFoundException
    */
   private Check getCheck() throws ConfigNotFoundException {
-    Check result = client.getAgentChecks().getValue().get(CHECK_PREFIX + serviceName);
+    Check result = client.getAgentChecks().getValue().get(CHECK_PREFIX + serviceId);
     if (result == null) {
       NewService service = new NewService();
-      service.setId(serviceName);
+      service.setId(serviceId);
       service.setName(serviceName);
       if (serviceAddressPropertyKey != null) {
         service.setAddress(CONFIG.getString(serviceAddressPropertyKey));
@@ -136,7 +183,7 @@ public class Healthy implements LifeCycle {
 
       client.agentServiceRegister(service);
     }
-    return client.getAgentChecks().getValue().get(CHECK_PREFIX + serviceName);
+    return client.getAgentChecks().getValue().get(CHECK_PREFIX + serviceId);
   }
 
   /**
@@ -145,7 +192,7 @@ public class Healthy implements LifeCycle {
    * @throws ConfigNotFoundException
    */
   private void deRegisterService() throws ConfigNotFoundException {
-    client.agentServiceDeregister(serviceName);
+    client.agentServiceDeregister(serviceId);
   }
 
   /**
