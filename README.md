@@ -3,7 +3,10 @@
 [![][codecov img]][codecov]
 [![][codacy img]][codacy]
 
+# Healthy
 A ready-to-use LifeCycle that registers and reports health to Consul. It assumes you're using Jindy and that your application is also a LifeCycle with a well implemented isRunning() method.
+
+![alt text][cardio]  
 
 ## Usage
 In your application configuration, make sure you have the following properties
@@ -21,6 +24,8 @@ In your application bootstrap, run the following code
 Healthy l = new Healthy(myApp, "myapp", null, "my.service.port");
 l.start();
 ```
+
+[bear]:https://www.irenical.org/healthy/cardio.png "Sometimes a straight line"
 
 [maven]:http://search.maven.org/#search|gav|1|g:"org.irenical.healthy"%20AND%20a:"healthy"
 [maven img]:https://maven-badges.herokuapp.com/maven-central/org.irenical.healthy/healthy/badge.svg
