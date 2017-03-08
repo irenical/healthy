@@ -31,3 +31,5 @@ l.start();
 [codecov]:https://codecov.io/gh/irenical/healthy
 [codecov img]:https://codecov.io/gh/irenical/healthy/branch/master/graph/badge.svg
 
+[codacy]:https://www.codacy.com/app/tiagosimao/healthy?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=irenical/healthy&amp;utm_campaign=Badge_Grade
+[codacy img]:https://api.codacy.com/project/badge/Grade/5314e5c382804a95bea12bd9a2a8c2da
