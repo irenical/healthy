@@ -25,7 +25,7 @@ Healthy l = new Healthy(myApp, "myapp", null, "my.service.port");
 l.start();
 ```
 
-[cardio]:https://www.irenical.org/healthy/cardio.png "Sometimes a straight line"
+[cardio]:https://www.irenical.org/healthy/hb.png "Sometimes a straight line"
 
 [maven]:http://search.maven.org/#search|gav|1|g:"org.irenical.healthy"%20AND%20a:"healthy"
 [maven img]:https://maven-badges.herokuapp.com/maven-central/org.irenical.healthy/healthy/badge.svg
