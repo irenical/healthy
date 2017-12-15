@@ -133,6 +133,7 @@ public class Healthy implements LifeCycle {
 
   @Override
   public void stop() throws ConfigNotFoundException {
+    checkExecutor.shutdownNow();
     deRegisterService();
   }
 
